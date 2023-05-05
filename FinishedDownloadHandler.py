@@ -5,41 +5,32 @@ from glob import glob
 from pyunpack import Archive
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+import PySimpleGUI as sg
+import threading
 
 
 class ArchiveExtractor(FileSystemEventHandler):
-    def extract_archive(self, file_path):
-        try:
-            Archive(file_path).extractall(os.path.dirname(file_path))
-            print(f"Extracted: {file_path}")
-        except Exception as e:
-            print(f"Error extracting {file_path}: {e}")
-
-    def process(self, event):
-        if event.is_directory:
-            return
-
-        file_path = event.src_path
-        if zipfile.is_zipfile(file_path) or file_path.lower().endswith(('.rar')):
-            self.extract_archive(file_path)
+    # ... (same as your original script)
 
     def on_created(self, event):
         self.process(event)
 
-    def check_existing_files(self, folder_to_monitor):
+    def check_existing_files(self, folder_to_monitor, window):
         for root, _, files in os.walk(folder_to_monitor):
             for file in files:
                 file_path = os.path.join(root, file)
                 if zipfile.is_zipfile(file_path) or file_path.lower().endswith(('.rar')):
-                    self.extract_archive(file_path)
+                    self.extract_archive(file_path, window)
+
+    def extract_archive(self, file_path, window=None):
+        # ... (same as your original script)
+        if window:
+            window.write_event_value("extracted", file_path)
 
 
-if __name__ == "__main__":
-    # Replace this with the path to the folder you want to monitor
-    folder_to_monitor = '/home/goodchoice/Desktop/Testfolder/'
-
+def run_finished_download_handler(folder_to_monitor, window):
     event_handler = ArchiveExtractor()
-    event_handler.check_existing_files(folder_to_monitor)
+    event_handler.check_existing_files(folder_to_monitor, window)
 
     observer = Observer()
     observer.schedule(event_handler, folder_to_monitor, recursive=True)
@@ -52,3 +43,38 @@ if __name__ == "__main__":
         observer.stop()
 
     observer.join()
+
+
+if __name__ == "__main__":
+    # Define the layout for the GUI
+    layout = [
+        [sg.Text("Select folder to monitor:")],
+        [sg.Input(), sg.FolderBrowse()],
+        [sg.Button("Start"), sg.Button("Exit")],
+        [sg.Output(size=(80, 20), key="output")]
+    ]
+
+    # Create the window using the layout
+    window = sg.Window("FinishedDownloadHandler", layout, finalize=True)
+
+    # Event loop to process user input
+    while True:
+        event, values = window.read()
+
+        if event in (sg.WIN_CLOSED, "Exit"):
+            break
+
+        if event == "Start":
+            folder_to_monitor = values[0]
+            if folder_to_monitor:
+                # Run the FinishedDownloadHandler in a separate thread
+                handler_thread = threading.Thread(
+                    target=run_finished_download_handler, args=(folder_to_monitor, window))
+                handler_thread.start()
+
+        if event == "extracted":
+            file_path = values["extracted"]
+            print(f"Extracted: {file_path}")
+
+    # Close the window
+    window.close()
