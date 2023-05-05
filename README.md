@@ -9,4 +9,4 @@ requires atleast python3.10, pyunpack, watchdog.
 To run it i have to type `python3.10 FinishedDownloadHandler.py`
 
 
-more features to come. 
+monitors qbitorrent RSS folder by default in the left hand panel 
