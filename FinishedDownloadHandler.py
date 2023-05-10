@@ -39,41 +39,6 @@ def display_rules_in_textbox(rules, textbox):
 
 
 class ArchiveExtractor(FileSystemEventHandler):
-    def extract_archive(self, file_path):
-        try:
-            Archive(file_path).extractall(os.path.dirname(file_path))
-            print(f"Extracted: {file_path}")
-        except Exception as e:
-            print(f"Error extracting {file_path}: {e}")
-
-    def process(self, event):
-        if event.is_directory:
-            return
-
-        file_path = event.src_path
-        if zipfile.is_zipfile(file_path) or file_path.lower().endswith(('.rar')):
-            self.extract_archive(file_path)
-
-    def on_created(self, event):
-        self.process(event)
-
-    def check_existing_files(self, folder_to_monitor):
-        for root, _, files in os.walk(folder_to_monitor):
-            for file in files:
-                file_path = os.path.join(root, file)
-                if zipfile.is_zipfile(file_path) or file_path.lower().endswith(('.rar')):
-                    self.extract_archive(file_path)
-
-    def on_created(self, event):
-        self.process(event)
-
-    def check_existing_files(self, folder_to_monitor, window=None):
-        for root, _, files in os.walk(folder_to_monitor):
-            for file in files:
-                file_path = os.path.join(root, file)
-                if zipfile.is_zipfile(file_path) or file_path.lower().endswith(('.rar')):
-                    self.extract_archive(file_path)
-
     def extract_archive(self, file_path, window=None):
         try:
             Archive(file_path).extractall(os.path.dirname(file_path))
@@ -92,7 +57,7 @@ class ArchiveExtractor(FileSystemEventHandler):
     def on_created(self, event):
         self.process(event)
 
-    def check_existing_files(self, folder_to_monitor):
+    def check_existing_files(self, folder_to_monitor, window=None):
         for root, _, files in os.walk(folder_to_monitor):
             for file in files:
                 file_path = os.path.join(root, file)
